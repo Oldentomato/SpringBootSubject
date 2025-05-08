@@ -3,9 +3,11 @@ package com.example.MySpringbootLab.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name="books")
@@ -28,6 +30,7 @@ public class Book {
     private int price;
 
     @Column(nullable = false)
-    private LocalDate publishDate;
+    @CreationTimestamp
+    private LocalDateTime publishDate = LocalDateTime.now();
 
 }
