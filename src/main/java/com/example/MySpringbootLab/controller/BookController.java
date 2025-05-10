@@ -1,10 +1,11 @@
 package com.example.MySpringbootLab.controller;
 
 import com.example.MySpringbootLab.entity.Book;
+import com.example.MySpringbootLab.entity.dto.BookDTO;
 import com.example.MySpringbootLab.exception.BusinessException;
-import com.example.MySpringbootLab.repository.BookRepository;
+import com.example.MySpringbootLab.service.BookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,55 +17,52 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RequestMapping("/api/books")
 public class BookController {
-    private final BookRepository bookRepository;
+    private final BookService bookService;
 
 
     @PostMapping
-    public Book create(@RequestBody Book book){
-        return bookRepository.save(book);
+    public ResponseEntity<BookDTO.BookResponse> create(@Valid @RequestBody BookDTO.BookCreateRequest request){
+        BookDTO.BookResponse createdBook = bookService.createBook(request);
+        return ResponseEntity.ok(createdBook);
+
     }
 
     @GetMapping
-    public List<Book> getBooks(){
-        return bookRepository.findAll();
+    //이 부분 정리할것
+    public List<BookDTO.BookResponse> getBooks(){
+        return bookService.getAllBooks()
+                .stream()
+                .map(book -> new BookDTO.BookResponse(book))
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Book> getBookById(@PathVariable Long id){
-        Optional<Book> optionalBook = bookRepository.findById(id);
+    public BookDTO.BookResponse getBookById(@PathVariable Long id){
+        Book existBook = bookService.getBookById(id);
 
-        return optionalBook.map(ResponseEntity::ok)
-                .orElse(new ResponseEntity("not found", HttpStatus.NOT_FOUND));
+        return new BookDTO.BookResponse(existBook);
     }
 
     @GetMapping("/isbn/{isbn}")
-    public Book getBookByIsbn(@PathVariable String isbn){
-        Book existBook = getExistBook(bookRepository.findByIsbn(isbn));
+    public BookDTO.BookResponse getBookByIsbn(@PathVariable String isbn){
+        Book existBook = bookService.getBookByIsbn(isbn);
 
-        return existBook;
+        return new BookDTO.BookResponse(existBook);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book bookDetail){
-        Book existBook = getExistBook(bookRepository.findById(id));
-
-        existBook.setTitle(bookDetail.getTitle());
-        Book updateBook = bookRepository.save(existBook);
+    public ResponseEntity<BookDTO.BookResponse> updateBook(@PathVariable Long id,
+                                           @Valid @RequestBody BookDTO.BookUpdateRequest request){
+        BookDTO.BookResponse updateBook = bookService.updateBook(request,id);
         return ResponseEntity.ok(updateBook);
 
     }
 
-    private Book getExistBook(Optional<Book> bookRepository) {
-        Book existBook = bookRepository.orElseThrow(() -> new BusinessException("Book Not Found", HttpStatus.NOT_FOUND));
-        return existBook;
-    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteBook(@PathVariable Long id){
-        Book existBook = getExistBook(bookRepository.findById(id));
-        bookRepository.delete(existBook);
-
-        return ResponseEntity.ok(existBook.getTitle() + "가 정상적으로 삭제되었습니다");
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id){
+        bookService.deleteBook(id);
+        return ResponseEntity.noContent().build();
     }
 
 
