@@ -21,39 +21,37 @@ public class BookController {
 
 
     @PostMapping
-    public ResponseEntity<BookDTO.BookResponse> create(@Valid @RequestBody BookDTO.BookCreateRequest request){
-        BookDTO.BookResponse createdBook = bookService.createBook(request);
+    public ResponseEntity<BookDTO.Response> create(@Valid @RequestBody BookDTO.Request request){
+        BookDTO.Response createdBook = bookService.createBook(request);
         return ResponseEntity.ok(createdBook);
 
     }
 
     @GetMapping
     //이 부분 정리할것
-    public List<BookDTO.BookResponse> getBooks(){
-        return bookService.getAllBooks()
-                .stream()
-                .map(book -> new BookDTO.BookResponse(book))
-                .toList();
+    public ResponseEntity<List<BookDTO.Response>> getBooks(){
+        List<BookDTO.Response> books = bookService.getAllBooks();
+        return ResponseEntity.ok(books);
     }
 
     @GetMapping("/{id}")
-    public BookDTO.BookResponse getBookById(@PathVariable Long id){
-        Book existBook = bookService.getBookById(id);
+    public ResponseEntity<BookDTO.Response> getBookById(@PathVariable Long id){
+        BookDTO.Response existBook = bookService.getBookById(id);
 
-        return new BookDTO.BookResponse(existBook);
+        return ResponseEntity.ok(existBook);
     }
 
     @GetMapping("/isbn/{isbn}")
-    public BookDTO.BookResponse getBookByIsbn(@PathVariable String isbn){
-        Book existBook = bookService.getBookByIsbn(isbn);
+    public ResponseEntity<BookDTO.Response> getBookByIsbn(@Valid @PathVariable String isbn){
+        BookDTO.Response existBook = bookService.getBookByIsbn(isbn);
 
-        return new BookDTO.BookResponse(existBook);
+        return ResponseEntity.ok(existBook);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<BookDTO.BookResponse> updateBook(@PathVariable Long id,
-                                           @Valid @RequestBody BookDTO.BookUpdateRequest request){
-        BookDTO.BookResponse updateBook = bookService.updateBook(request,id);
+    public ResponseEntity<BookDTO.Response> updateBook(@PathVariable Long id,
+                                           @Valid @RequestBody BookDTO.Request request){
+        BookDTO.Response updateBook = bookService.updateBook(request,id);
         return ResponseEntity.ok(updateBook);
 
     }
