@@ -4,6 +4,8 @@ package com.example.MySpringbootLab.repository;
 import com.example.MySpringbootLab.entity.Book;
 import com.example.MySpringbootLab.entity.BookDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,10 +13,12 @@ import java.util.Optional;
 
 @Repository
 public interface BookDetailRepository extends JpaRepository<BookDetail, Long> {
-    Optional<Book> findByIsbn(String isbn);
-    List<Book> findByAuthorContainingIgnoreCase(String author);
-    List<Book> findByTitleContainingIgnoreCase(String title);
-    Optional<Book> findByIdWithBookDetail(Long id);
-    Optional<Book> findByIsbnWithBookDetail(String isbn);
-    boolean existsByIsbn(String isbn);
+
+    Optional<BookDetail> findByBookId(Long bookId);
+
+    @Query("SELECT bd FROM BookDetail bd JOIN FETCH bd.book WHERE bd.id = :id")
+    Optional<BookDetail> findByIdWithBook(@Param("book_detail_id") Long id);
+
+    @Query("SELECT bd FROM BookDetail bd WHERE bd.publisher = :publisher")
+    List<BookDetail> findByPublisher(@Param("publisher") String publisher);
 }

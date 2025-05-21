@@ -1,9 +1,7 @@
 package com.example.MySpringbootLab.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -11,12 +9,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="books")
-@Getter @Setter
+@Table(name = "books")
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@DynamicUpdate
+@Getter
+@Setter
 public class Book {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "book_id")
     private Long id;
 
     @Column(nullable = false)
@@ -25,18 +28,19 @@ public class Book {
     @Column(nullable = false)
     private String author;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false)
     private String isbn;
 
-    @Column(nullable = false)
-    private int price;
+    private Integer price;
 
-    @Column(nullable = false)
-    @CreationTimestamp
-    private LocalDateTime publishDate = LocalDateTime.now();
+    private LocalDate publishDate;
 
-    // mappedBy는 Detail의 Book의 변수명을 쓰면 됨
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "book", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "book",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
     private BookDetail bookDetail;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="publisher_id")
+    private Publisher publisher;
 }

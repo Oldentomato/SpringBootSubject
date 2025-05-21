@@ -1,9 +1,7 @@
 package com.example.MySpringbootLab.controller;
 
-import com.example.MySpringbootLab.entity.Book;
-import com.example.MySpringbootLab.entity.dto.BookDTO;
-import com.example.MySpringbootLab.exception.BusinessException;
-import com.example.MySpringbootLab.service.BookService;
+import com.example.MySpringbootLab.entity.dto.PublisherDTO;
+import com.example.MySpringbootLab.service.PublisherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -11,57 +9,52 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
+@RequestMapping("/api/publishers")
 @RequiredArgsConstructor
-@RequestMapping("/api/books")
 public class BookController {
-    private final BookService bookService;
-
-
-    @PostMapping
-    public ResponseEntity<BookDTO.Response> create(@Valid @RequestBody BookDTO.Request request){
-        BookDTO.Response createdBook = bookService.createBook(request);
-        return ResponseEntity.ok(createdBook);
-
-    }
+    private final PublisherService publisherService;
 
     @GetMapping
-    //이 부분 정리할것
-    public ResponseEntity<List<BookDTO.Response>> getBooks(){
-        List<BookDTO.Response> books = bookService.getAllBooks();
-        return ResponseEntity.ok(books);
+    public ResponseEntity<List<PublisherDTO.Response>> getAllPublishers() {
+        List<PublisherDTO.Response> publishers = publisherService.getAllPublishers();
+        return ResponseEntity.ok(publishers);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookDTO.Response> getBookById(@PathVariable Long id){
-        BookDTO.Response existBook = bookService.getBookById(id);
-
-        return ResponseEntity.ok(existBook);
+    public ResponseEntity<PublisherDTO.Response> getPublisherById(@PathVariable Long id) {
+        PublisherDTO.Response publisher = publisherService.getPublisherById(id);
+        return ResponseEntity.ok(publisher);
     }
 
-    @GetMapping("/isbn/{isbn}")
-    public ResponseEntity<BookDTO.Response> getBookByIsbn(@Valid @PathVariable String isbn){
-        BookDTO.Response existBook = bookService.getBookByIsbn(isbn);
 
-        return ResponseEntity.ok(existBook);
+    @GetMapping("/name/{name}")
+    public ResponseEntity<PublisherDTO.Response> getPublisherByName(@PathVariable String name) {
+        PublisherDTO.Response publisher = publisherService.getPublisherByName(name);
+        return ResponseEntity.ok(publisher);
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<BookDTO.Response> updateBook(@PathVariable Long id,
-                                           @Valid @RequestBody BookDTO.Request request){
-        BookDTO.Response updateBook = bookService.updateBook(request,id);
-        return ResponseEntity.ok(updateBook);
-
+    @PostMapping
+    public ResponseEntity<PublisherDTO.Response> createPublisher(@Valid @RequestBody PublisherDTO.Request request) {
+        PublisherDTO.Response createdPublisher = publisherService.createPublisher(request);
+        return new ResponseEntity<>(createdPublisher, HttpStatus.CREATED);
     }
+
+    // 전체 교체 (기존 방식 유지)
+    @PutMapping("/{id}")
+    public ResponseEntity<PublisherDTO.Response> updatePublisher(
+            @PathVariable Long id,
+            @Valid @RequestBody PublisherDTO.Request request) {
+        PublisherDTO.Response updatedBook = publisherService.updatePublisher(id, request);
+        return ResponseEntity.ok(updatedBook);
+    }
+
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id){
-        bookService.deleteBook(id);
+    public ResponseEntity<Void> deletePublisher(@PathVariable Long id) {
+        publisherService.deletePublisher(id);
         return ResponseEntity.noContent().build();
     }
-
-
 }

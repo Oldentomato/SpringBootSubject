@@ -1,11 +1,12 @@
 package com.example.MySpringbootLab.entity.dto;
 
 import com.example.MySpringbootLab.entity.Book;
+import com.example.MySpringbootLab.entity.Book;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import lombok.*;
-import org.apache.logging.log4j.core.config.plugins.validation.constraints.NotBlank;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class BookDTO {
 
@@ -13,21 +14,26 @@ public class BookDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class Request{
-        @NotBlank(message = "title is required")
+    public static class Request {
+        @NotBlank(message = "Book title is required")
         private String title;
 
-        @NotBlank(message = "author is required")
+        @NotBlank(message = "Author name is required")
         private String author;
 
-        @NotBlank(message = "isbn is required")
+        @NotBlank(message = "ISBN is required")
+        @Pattern(regexp = "^(?=(?:\\D*\\d){10}(?:(?:\\D*\\d){3})?$)[\\d-]+$",
+                message = "ISBN must be valid (10 or 13 digits, with or without hyphens)")
         private String isbn;
 
-        @NotBlank(message = "price is required")
-        private int price;
+        @PositiveOrZero(message = "Price must be positive or zero")
+        private Integer price;
 
-        @NotBlank(message = "publisDate is required")
-        private LocalDateTime publisDate;
+        @PastOrPresent(message = "Publish date cannot be in the future")
+        private LocalDate publishDate;
+
+        @NotNull(message = "Publisher ID is required")
+        private Long publisherId;
 
         @Valid
         private BookDetailDTO detailRequest;
@@ -37,23 +43,15 @@ public class BookDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class BookDetailDTO{
-        @NotBlank(message = "description is required")
+    public static class BookDetailDTO {
         private String description;
-
-        @NotBlank(message = "language is required")
         private String language;
 
-        @NotBlank(message = "pageCount is required")
-        private int pageCount;
+        @PositiveOrZero(message = "Page count must be positive or zero")
+        private Integer pageCount;
 
-        @NotBlank(message = "publisher is required")
         private String publisher;
-
-        @NotBlank(message = "coverImageUrl is required")
         private String coverImageUrl;
-
-        @NotBlank(message = "edition is required")
         private String edition;
     }
 
@@ -61,26 +59,67 @@ public class BookDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class Response{
+    public static class PatchRequest {
+        private String title;
+        private String author;
+
+        @Pattern(regexp = "^(?=(?:\\D*\\d){10}(?:(?:\\D*\\d){3})?$)[\\d-]+$",
+                message = "ISBN must be valid (10 or 13 digits, with or without hyphens)")
+        private String isbn;
+
+        @PositiveOrZero(message = "Price must be positive or zero")
+        private Integer price;
+
+        @Past(message = "Publish date must be in the past")
+        private LocalDate publishDate;
+
+        @Valid
+        private BookDetailPatchRequest detailRequest;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BookDetailPatchRequest {
+        private String description;
+        private String language;
+        private Integer pageCount;
+        private String publisher;
+        private String coverImageUrl;
+        private String edition;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Response {
         private Long id;
         private String title;
         private String author;
         private String isbn;
-        private int price;
-        private LocalDateTime publishDate;
+        private Integer price;
+        private LocalDate publishDate;
+        private PublisherDTO.SimpleResponse publisher;
         private BookDetailResponse detail;
 
-        public static Response fromEntity(Book book){
+        public static Response fromEntity(Book book) {
+            PublisherDTO.SimpleResponse publisherResponse = book.getPublisher() != null
+                    ? PublisherDTO.SimpleResponse.fromEntity(book.getPublisher())
+                    : null;
+
             BookDetailResponse detailResponse = book.getBookDetail() != null
                     ? BookDetailResponse.builder()
                     .id(book.getBookDetail().getId())
                     .description(book.getBookDetail().getDescription())
+                    .language(book.getBookDetail().getLanguage())
                     .pageCount(book.getBookDetail().getPageCount())
                     .publisher(book.getBookDetail().getPublisher())
                     .coverImageUrl(book.getBookDetail().getCoverImageUrl())
                     .edition(book.getBookDetail().getEdition())
                     .build()
-                    :null;
+                    : null;
 
             return Response.builder()
                     .id(book.getId())
@@ -89,9 +128,9 @@ public class BookDTO {
                     .isbn(book.getIsbn())
                     .price(book.getPrice())
                     .publishDate(book.getPublishDate())
+                    .publisher(publisherResponse)
                     .detail(detailResponse)
                     .build();
-
         }
     }
 
@@ -99,71 +138,33 @@ public class BookDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class BookDetailResponse{
-        private Long id;
-        private String description;
-        private int pageCount;
-        private String publisher;
-        private String coverImageUrl;
-        private String edition;
-    }
-
-//    @Getter
-//    @Setter
-//    public static class BookCreateRequest{
-//        @NotBlank(message = "title is required")
-//        private String title;
-//
-//        @NotBlank(message = "author is required")
-//        private String author;
-//
-//        @NotBlank(message = "isbn is required")
-//        private String isbn;
-//
-//        @NotBlank(message = "price is required")
-//        private int price;
-//
-//
-//        public Book toEntity(){
-//            Book book = new Book();
-//            book.setTitle(this.title);
-//            book.setAuthor(this.author);
-//            book.setIsbn(this.isbn);
-//            book.setPrice(this.price);
-//
-//            return book;
-//        }
-//    }
-
-    @Getter
-    @Setter
-    public static class BookUpdateRequest{
-        @NotBlank(message = "title is required")
-        private String title;
-
-        @NotBlank(message = "author is required")
-        private String author;
-
-        @NotBlank(message = "price is required")
-        private int price;
-    }
-
-    @Getter
-    public static class BookResponse{
+    public static class SimpleResponse {
         private Long id;
         private String title;
         private String author;
         private String isbn;
-        private int price ;
-        private LocalDateTime publishDate;
 
-        public BookResponse(Book book){
-            this.id = book.getId();
-            this.title = book.getTitle();
-            this.author = book.getAuthor();
-            this.isbn = book.getIsbn();
-            this.price = book.getPrice();
-            this.publishDate = book.getPublishDate();
+        public static SimpleResponse fromEntity(Book book) {
+            return SimpleResponse.builder()
+                    .id(book.getId())
+                    .title(book.getTitle())
+                    .author(book.getAuthor())
+                    .isbn(book.getIsbn())
+                    .build();
         }
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class BookDetailResponse {
+        private Long id;
+        private String description;
+        private String language;
+        private Integer pageCount;
+        private String publisher;
+        private String coverImageUrl;
+        private String edition;
     }
 }
